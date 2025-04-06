@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const query = searchBox.value.trim();
       if (query) {
         try {
+          console.log("Sending request to server with query:", query);  // Log query being sent
+
           // Send the query to the backend API
           const response = await fetch('/api/generate', {
             method: 'POST',
@@ -22,23 +24,26 @@ document.addEventListener('DOMContentLoaded', () => {
           });
 
           if (!response.ok) {
-            throw new Error('Failed to fetch data from Pollinations API');
+            const error = await response.text();
+            console.error('Error response from server:', error);
+            throw new Error(`Failed to fetch data from server: ${error}`);
           }
 
           const data = await response.json();
+          console.log("Received data from the server:", data);
 
           // Clear the existing content in the card grid
           cardGrid.innerHTML = '';
 
-          // Parse and insert the HTML response into the grid
+          // Check if the HTML response is present, else show an error
           const newCard = document.createElement('div');
           newCard.classList.add('card');
-          newCard.innerHTML = data.html || 'No content generated.';
+          newCard.innerHTML = data.html || '<p>No content generated.</p>';
           cardGrid.appendChild(newCard);
 
         } catch (error) {
           console.error('Error generating content:', error);
-          cardGrid.innerHTML = '<p>Error generating content. Please try again later.</p>';
+          cardGrid.innerHTML = `<p>Error generating content: ${error.message}</p>`;
         }
       } else {
         cardGrid.innerHTML = '<p>Please enter a query.</p>';
