@@ -23,34 +23,31 @@ serve(async (req) => {
         });
       }
 
-      try {
-        const aiRes = await fetch("https://text.pollinations.ai/feed", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ query }),
-        });
+      const encodedPrompt = encodeURIComponent(query);
+      const aiURL = `https://text.pollinations.ai/${encodedPrompt}`;
+      console.log(`🌐 Fetching AI content from: ${aiURL}`);
 
-        if (!aiRes.ok) {
-          const errorText = await aiRes.text();
-          console.error("❌ Pollinations API failed:", errorText);
-          return new Response(JSON.stringify({ error: `Pollinations API error: ${errorText}` }), {
+      try {
+        const res = await fetch(aiURL);
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("❌ Pollinations AI error:", errorText);
+          return new Response(JSON.stringify({ error: "Pollinations AI request failed." }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
           });
         }
 
-        const aiData = await aiRes.json();
-        console.log("✅ Pollinations API response:", aiData);
+        const html = await res.text();
+        console.log("✅ AI HTML received.");
 
-        return new Response(JSON.stringify({ html: aiData.html || "<div>No content generated.</div>" }), {
+        return new Response(JSON.stringify({ html }), {
           headers: { "Content-Type": "application/json" },
         });
 
       } catch (err) {
-        console.error("💥 Error calling Pollinations API:", err);
-        return new Response(JSON.stringify({ error: `API call error: ${err.message}` }), {
+        console.error("💥 Fetch error:", err);
+        return new Response(JSON.stringify({ error: "Failed to fetch AI content." }), {
           status: 500,
           headers: { "Content-Type": "application/json" },
         });
@@ -58,7 +55,7 @@ serve(async (req) => {
 
     } catch (err) {
       console.error("💥 JSON parsing error:", err);
-      return new Response(JSON.stringify({ error: `Request parsing error: ${err.message}` }), {
+      return new Response(JSON.stringify({ error: "Invalid request body." }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
