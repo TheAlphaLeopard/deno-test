@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Digisim Test Scraper</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>🧠 Digisim Test Scraper</h1>
+  <input type="text" id="urlInput" placeholder="Enter a URL to scrape" />
+  <button onclick="scrape()">Scrape</button>
+  <pre id="result"></pre>
+
+  <script>
+    async function scrape() {
+      const url = document.getElementById('urlInput').value;
+      const res = await fetch('/api/scrape?url=' + encodeURIComponent(url));
+      const text = await res.text();
+      document.getElementById('result').textContent = text;
+    }
+  </script>
+</body>
+</html>
