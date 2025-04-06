@@ -4,40 +4,33 @@ import { serveDir } from "https://deno.land/std@0.224.0/http/file_server.ts";
 Deno.serve(async (req) => {
   const url = new URL(req.url);
 
-  // Handle /api/scrape endpoint
-  if (url.pathname === "/api/scrape") {
-    const targetUrl = url.searchParams.get("url");
-    if (!targetUrl) {
-      console.log("❌ No URL provided");
-      return new Response("Missing URL", { status: 400 });
-    }
+  // New endpoint for generating code based on API keys
+  if (url.pathname === "/api/generate" && req.method === "POST") {
+    const body = await req.json();
+    const { openaiKey, huggingfaceKey, pollinationsEnabled } = body;
+    console.log("Received API keys:");
+    console.log("OpenAI:", openaiKey);
+    console.log("HuggingFace:", huggingfaceKey);
+    console.log("Pollinations Enabled:", pollinationsEnabled);
 
-    console.log(`🌐 URL entered: ${targetUrl}`);
-    console.log("🔍 Scrape starting...");
+    // For test purposes, generate dummy code using the provided keys
+    const generatedHtml = `<div><h2>Welcome to digisim.ai!</h2><p>OpenAI Key: ${openaiKey}</p></div>`;
+    const generatedJs = `console.log("Using HuggingFace Key: ${huggingfaceKey}");`;
+    // Use proper pollinations.ai domain if enabled
+    const pollinationsNote = pollinationsEnabled
+      ? "Pollinations.ai enabled (using https://www.pollinations.ai)"
+      : "Pollinations.ai disabled";
+    const generatedCss = `body { background: #222; color: #fff; } /* ${pollinationsNote} */`;
 
-    try {
-      const res = await fetch(targetUrl);
-      const html = await res.text();
-
-      console.log("📄 HTML fetched, processing...");
-
-      const textOnly = html
-        .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
-        .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
-        .replace(/<[^>]*>/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-
-      console.log("✅ Scrape finished!");
-      return new Response(textOnly, {
-        headers: { "Content-Type": "text/plain" }
-      });
-    } catch (err) {
-      console.log(`❌ Error while scraping: ${err.message}`);
-      return new Response("Failed to scrape: " + err.message, { status: 500 });
-    }
+    return new Response(JSON.stringify({
+      html: generatedHtml,
+      js: generatedJs,
+      css: generatedCss
+    }), {
+      headers: { "Content-Type": "application/json" }
+    });
   }
 
-  // Serve static files
+  // Serve static files for other requests
   return serveDir(req);
 });
