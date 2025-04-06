@@ -1,45 +1,34 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const searchBox = document.querySelector(".search-box");
-  const cardGrid = document.querySelector(".card-grid");
+import { parseGeneratedCode } from './parser.js';
 
-  if (!searchBox || !cardGrid) {
-    console.error("Missing .search-box or .card-grid element");
-    return;
-  }
+const searchBox = document.querySelector('.search-box');
+const feed = document.querySelector('.feed');
 
-  searchBox.addEventListener("keydown", async (e) => {
-    if (e.key === "Enter") {
-      const prompt = searchBox.value.trim();
-      if (!prompt) return;
+searchBox.addEventListener('keydown', async (event) => {
+  if (event.key === 'Enter') {
+    const query = searchBox.value.trim();
+    if (!query) return;
 
-      const encodedPrompt = encodeURIComponent(prompt);
-      const url = `https://text.pollinations.ai/${encodedPrompt}`;
+    const encodedQuery = encodeURIComponent(query);
+    const response = await fetch(`https://text.pollinations.ai/${encodedQuery}`);
+    const responseText = await response.text();
 
-      console.log("Fetching from:", url);
+    const { html, css, js } = parseGeneratedCode(responseText);
 
-      try {
-        const res = await fetch(url);
-        if (!res.ok) {
-          console.error("Pollinations fetch error:", await res.text());
-          return;
-        }
+    // Replace the feed with generated HTML
+    document.querySelector('.feed').innerHTML = html;
 
-        const text = await res.text();
-
-        // Extract the HTML content from the text response (basic heuristic)
-        const htmlMatch = text.match(/<[^>]+>[\s\S]*<\/[^>]+>/);
-        const extractedHTML = htmlMatch ? htmlMatch[0] : `<div>${text}</div>`;
-
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = extractedHTML;
-
-        cardGrid.prepend(card); // Add newest result at the top
-        searchBox.value = "";
-
-      } catch (err) {
-        console.error("Error fetching AI response:", err);
-      }
+    // Inject CSS
+    if (css) {
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
     }
-  });
+
+    // Inject JS
+    if (js) {
+      const script = document.createElement('script');
+      script.textContent = js;
+      document.body.appendChild(script);
+    }
+  }
 });
