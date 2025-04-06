@@ -4,6 +4,9 @@ const searchBox = document.querySelector('.search-box');
 const feed = document.querySelector('.feed');
 
 searchBox.addEventListener('keydown', async (event) => {
+  // Log when the event listener is triggered
+  console.log('Event listener triggered');
+
   if (event.key === 'Enter') {
     const query = searchBox.value.trim();
     if (!query) return;
