@@ -1,35 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>AI Apps</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Digisim AI</title>
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background-color: #0d0d0d;
+      background: #0d0d0d;
       color: white;
     }
 
-    .topbar {
-      background-color: #1a1a1a;
+    .navbar {
+      background: #1a1a1a;
       padding: 10px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .topbar h1 {
-      margin: 0;
-      font-size: 24px;
+    .navbar h1 {
       color: #f6ba02;
+      margin: 0;
     }
 
     .settings-btn {
       background: none;
       border: none;
       color: white;
-      font-size: 18px;
+      font-size: 20px;
       cursor: pointer;
     }
 
@@ -39,12 +39,12 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background-color: #1a1a1a;
+      background: #1a1a1a;
+      border: 2px solid #f6ba02;
       padding: 20px;
-      border: 1px solid #f6ba02;
       z-index: 9999;
-      box-shadow: 0 0 15px rgba(246, 186, 2, 0.3);
       width: 300px;
+      box-shadow: 0 0 15px rgba(246, 186, 2, 0.5);
     }
 
     .popup h2 {
@@ -52,54 +52,94 @@
       color: #f6ba02;
     }
 
-    .content {
-      padding: 20px;
+    .popup label {
+      display: block;
+      margin-top: 10px;
     }
 
-    .app-card {
-      background-color: #1f1f1f;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-left: 4px solid #f6ba02;
+    .popup input[type="text"],
+    .popup input[type="checkbox"] {
+      margin-top: 5px;
+      width: 100%;
+      padding: 5px;
+      background: #2a2a2a;
+      border: 1px solid #555;
+      color: white;
+    }
+
+    .popup input[type="checkbox"] {
+      width: auto;
+    }
+
+    .popup button {
+      margin-top: 15px;
+      padding: 8px 12px;
+      background: #f6ba02;
+      border: none;
+      cursor: pointer;
+      color: black;
+    }
+
+    #generated-content {
+      padding: 20px;
     }
   </style>
 </head>
 <body>
 
-  <div class="topbar">
-    <h1>AI Apps</h1>
+  <div class="navbar">
+    <h1>digisim.ai</h1>
     <button class="settings-btn" onclick="togglePopup()">⚙️</button>
   </div>
 
   <div class="popup" id="settingsPopup">
-    <h2>Settings</h2>
-    <p>Here you can configure your AI app preferences.</p>
+    <h2>AI Settings</h2>
+    <form id="apiForm">
+      <label>OpenAI API Key:
+        <input type="text" id="openaiKey" required />
+      </label>
+      <label>Hugging Face API Key:
+        <input type="text" id="huggingfaceKey" required />
+      </label>
+      <label>
+        <input type="checkbox" id="pollinationsCheck" /> Use Pollinations.ai?
+      </label>
+      <button type="submit">Save & Generate</button>
+    </form>
   </div>
 
-  <div class="content">
-    <div class="app-card">
-      <h3>Text Extractor</h3>
-      <p>Extracts all visible text from any given URL.</p>
-    </div>
-    <div class="app-card">
-      <h3>Coming Soon</h3>
-      <p>More AI tools will be added soon.</p>
-    </div>
+  <div id="generated-content">
+    <!-- Generated HTML/CSS/JS will go here -->
   </div>
 
   <script>
     function togglePopup() {
       const popup = document.getElementById('settingsPopup');
-      popup.style.display = (popup.style.display === 'block') ? 'none' : 'block';
+      popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
     }
 
-    // Optional: close popup if clicked outside
-    window.addEventListener('click', function(e) {
-      const popup = document.getElementById('settingsPopup');
-      const btn = document.querySelector('.settings-btn');
-      if (popup.style.display === 'block' && !popup.contains(e.target) && !btn.contains(e.target)) {
-        popup.style.display = 'none';
-      }
+    document.getElementById('apiForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const openaiKey = document.getElementById('openaiKey').value.trim();
+      const huggingfaceKey = document.getElementById('huggingfaceKey').value.trim();
+      const pollinations = document.getElementById('pollinationsCheck').checked;
+
+      const response = await fetch('/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          openaiKey,
+          huggingfaceKey,
+          pollinations
+        })
+      });
+
+      const result = await response.text();
+      document.getElementById('generated-content').innerHTML = result;
+      togglePopup();
     });
   </script>
 
