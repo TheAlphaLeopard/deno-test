@@ -2,224 +2,106 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>digisim.ai</title>
-  <link rel="stylesheet" href="styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans&display=swap" rel="stylesheet">
-  <link rel="apple-touch-icon" sizes="180x180" href="img/favicon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.svg">
-  <link rel="icon" type="image/png" sizes="16x16" href="img/favicon.svg">
+  <title>AI Apps</title>
   <style>
-    /* Styles for the settings popup */
-    .settings-popup {
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #0d0d0d;
+      color: white;
+    }
+
+    .topbar {
+      background-color: #1a1a1a;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #f6ba02;
+    }
+
+    .settings-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .popup {
       display: none;
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: #222;
+      background-color: #1a1a1a;
       padding: 20px;
-      border: 2px solid #f6ba02;
-      border-radius: 8px;
-      z-index: 1000;
-      width: 300px;
-      color: #fff;
-    }
-    .settings-popup input[type="text"] {
-      width: 100%;
-      padding: 8px;
-      margin: 8px 0;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
-    .settings-popup label {
-      display: block;
-      margin: 8px 0 4px;
-    }
-    .settings-popup button {
-      padding: 8px 16px;
-      background: #f6ba02;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      color: #000;
-    }
-    /* Optional overlay for popup */
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 500;
-      display: none;
-    }
-    /* Container for generated code */
-    #generatedContent {
-      padding: 20px;
-      margin: 20px;
-      background: #333;
-      color: #fff;
       border: 1px solid #f6ba02;
-      border-radius: 8px;
+      z-index: 9999;
+      box-shadow: 0 0 15px rgba(246, 186, 2, 0.3);
+      width: 300px;
+    }
+
+    .popup h2 {
+      margin-top: 0;
+      color: #f6ba02;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .app-card {
+      background-color: #1f1f1f;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-left: 4px solid #f6ba02;
     }
   </style>
 </head>
 <body>
-  <header class="header">
-    <div class="header-content">
-      <div class="nav-group">
-        <button class="nav-button left" title="Home" style="margin-left: 0px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <button class="nav-button left" title="New">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <button class="nav-button left optional" title="Refresh">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M23 4V10H17M1 20V14H7M3.51 9C4.01717 7.56678 4.87913 6.2854 6.01547 5.27542C7.1518 4.26543 8.52547 3.55976 10.0139 3.22426C11.5023 2.88876 13.0522 2.93436 14.5152 3.35677C15.9782 3.77918 17.3119 4.56473 18.39 5.64L23 10M1 14L5.61 18.36C6.68813 19.4353 8.02185 20.2208 9.48481 20.6432C10.9478 21.0656 12.4977 21.1112 13.9861 20.7757C15.4745 20.4402 16.8482 19.7346 17.9845 18.7246C19.1209 17.7146 19.9828 16.4332 20.49 15" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </div>
-      
-      <div class="nav-divider"></div>
-      
-      <button class="nav-button notification-button" title="Notifications">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      
-      <div class="search-container">
-        <input 
-          type="text" 
-          class="search-box"
-          placeholder="What do you want to make today?"
-        />
-      </div>
 
-      <div class="nav-group right">
-        <button class="nav-button right" title="Likes">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <div style="position: relative;">
-          <button class="nav-button right optional" title="Settings" id="settingsButton">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M10.3246 4.31731C10.751 2.5609 13.249 2.5609 13.6754 4.31731C13.9508 5.45193 15.2507 5.99038 16.2478 5.38285C17.7913 4.44239 19.5576 6.2087 18.6172 7.75218C18.0096 8.74925 18.5481 10.0492 19.6827 10.3246C21.4391 10.751 21.4391 13.249 19.6827 13.6754C18.5481 13.9508 18.0096 15.2507 18.6172 16.2478C19.5576 17.7913 17.7913 19.5576 16.2478 18.6172C15.2507 18.0096 13.9508 18.5481 13.6754 19.6827C13.249 21.4391 10.751 21.4391 10.3246 19.6827C10.0492 18.5481 8.74926 18.0096 7.75219 18.6172C6.2087 19.5576 4.44239 17.7913 5.38285 16.2478C5.99038 15.2507 5.45193 13.9508 4.31731 13.6754C2.5609 13.249 2.5609 10.751 4.31731 10.3246C5.45193 10.0492 5.99037 8.74926 5.38285 7.75218C4.44239 6.2087 6.2087 4.44239 7.75219 5.38285C8.74926 5.99037 10.0492 5.45193 10.3246 4.31731Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M15 12C15 13.6569 13.6569 15 12 15C10.3431 15 9 13.6569 9 12C9 10.3431 10.3431 9 12 9C13.6569 9 15 10.3431 15 12Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <!-- Settings Popup -->
-          <div class="settings-popup" id="settingsPopup">
-            <h3>Settings</h3>
-            <form id="settingsForm">
-              <label for="openaiKey">OpenAI API Key</label>
-              <input type="text" id="openaiKey" name="openaiKey" placeholder="Enter OpenAI API key" required>
-              
-              <label for="huggingfaceKey">HuggingFace API Key</label>
-              <input type="text" id="huggingfaceKey" name="huggingfaceKey" placeholder="Enter HuggingFace API key" required>
-              
-              <label for="pollinations">
-                <input type="checkbox" id="pollinations" name="pollinations">
-                Pollinations.ai?
-              </label>
-              
-              <button type="submit">Save Settings</button>
-            </form>
-          </div>
-        </div>
-        
-        <div class="nav-divider"></div>
-        
-        <a href='scrape.html' class="logo" id="logoLink">
-          <img src="img/logo.png" alt="digisim.ai logo" style="height: 100%; width: auto;" />
-        </a>
-
-        <button class="nav-button right" title="Menu">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M4 12H20M4 6H20M4 18H20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Container for generated content below the navbar -->
-  <div id="generatedContent">
-    <p>Generated content will appear here...</p>
+  <div class="topbar">
+    <h1>AI Apps</h1>
+    <button class="settings-btn" onclick="togglePopup()">⚙️</button>
   </div>
 
-  <div class="feed">
-    <div class="container">
-      <div class="feed-header">
-        <h1 class="feed-title">For You</h1>
-        <p class="feed-description">Projects we think you'll like based on your interests.</p>
-      </div>
-      <div class="card-grid">
-        <!-- Cards will be populated dynamically -->
-      </div>
-    </div>
+  <div class="popup" id="settingsPopup">
+    <h2>Settings</h2>
+    <p>Here you can configure your AI app preferences.</p>
   </div>
 
-  <div class="overlay" id="overlay"></div>
+  <div class="content">
+    <div class="app-card">
+      <h3>Text Extractor</h3>
+      <p>Extracts all visible text from any given URL.</p>
+    </div>
+    <div class="app-card">
+      <h3>Coming Soon</h3>
+      <p>More AI tools will be added soon.</p>
+    </div>
+  </div>
 
   <script>
-    // Toggle settings popup
-    const settingsButton = document.getElementById("settingsButton");
-    const settingsPopup = document.getElementById("settingsPopup");
-    const overlay = document.getElementById("overlay");
-    const settingsForm = document.getElementById("settingsForm");
-    const generatedContent = document.getElementById("generatedContent");
+    function togglePopup() {
+      const popup = document.getElementById('settingsPopup');
+      popup.style.display = (popup.style.display === 'block') ? 'none' : 'block';
+    }
 
-    settingsButton.addEventListener("click", () => {
-      settingsPopup.style.display = "block";
-      overlay.style.display = "block";
-    });
-
-    overlay.addEventListener("click", () => {
-      settingsPopup.style.display = "none";
-      overlay.style.display = "none";
-    });
-
-    // Handle settings form submission
-    settingsForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const openaiKey = document.getElementById("openaiKey").value;
-      const huggingfaceKey = document.getElementById("huggingfaceKey").value;
-      const pollinationsEnabled = document.getElementById("pollinations").checked;
-
-      // Send keys to the backend API
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ openaiKey, huggingfaceKey, pollinationsEnabled })
-      });
-      const result = await response.json();
-
-      // Inject the generated code into the page
-      generatedContent.innerHTML = `
-        <h2>Generated Code</h2>
-        <h3>HTML</h3>
-        <pre>${result.html}</pre>
-        <h3>JS</h3>
-        <pre>${result.js}</pre>
-        <h3>CSS</h3>
-        <pre>${result.css}</pre>
-      `;
-
-      // Hide the popup
-      settingsPopup.style.display = "none";
-      overlay.style.display = "none";
+    // Optional: close popup if clicked outside
+    window.addEventListener('click', function(e) {
+      const popup = document.getElementById('settingsPopup');
+      const btn = document.querySelector('.settings-btn');
+      if (popup.style.display === 'block' && !popup.contains(e.target) && !btn.contains(e.target)) {
+        popup.style.display = 'none';
+      }
     });
   </script>
-  <script src="app.js"></script>
+
 </body>
 </html>
