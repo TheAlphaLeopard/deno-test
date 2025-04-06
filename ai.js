@@ -1,16 +1,17 @@
 import { parseGeneratedCode } from './parser.js';
 
-const searchBox = document.querySelector('.search-container');
+const searchBox = document.querySelector('.search-box');
 const feed = document.querySelector('.feed');
 
 searchBox.addEventListener('keydown', async (event) => {
-  // Log when the event listener is triggered
-  console.log('Event listener triggered');
+  // Log to confirm the event listener is triggered
+  alert('Event listener triggered!');  // This will show an alert when the event triggers
 
   if (event.key === 'Enter') {
     const query = searchBox.value.trim();
     if (!query) return;
 
+    alert(`Query submitted: ${query}`);
     console.log(`Query submitted: ${query}`);
     const encodedQuery = encodeURIComponent(query);
 
@@ -26,6 +27,7 @@ searchBox.addEventListener('keydown', async (event) => {
       }
 
       const responseText = await response.text();
+      alert('AI response received successfully');
       console.log('AI response received successfully');
 
       // Parse the HTML, CSS, and JS
