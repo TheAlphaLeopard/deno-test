@@ -2,59 +2,55 @@ import { parseGeneratedCode } from './parser.js';
 
 const searchBox = document.querySelector('.search-box');
 const feed = document.querySelector('.feed');
-const cardGrid = feed.querySelector('.card-grid'); // The container where cards go
 
 searchBox.addEventListener('keydown', async (event) => {
   if (event.key === 'Enter') {
     const query = searchBox.value.trim();
     if (!query) return;
 
-    console.log(`User query: ${query}`);
-
-    // Make the request to Pollinations AI
+    console.log(`Query submitted: ${query}`);
     const encodedQuery = encodeURIComponent(query);
-    console.log(`Encoded query: ${encodedQuery}`);
 
     try {
+      // Make the API call
       const response = await fetch(`https://text.pollinations.ai/${encodedQuery}`);
+      
+      // Check for API success
       if (!response.ok) {
-        console.error('Failed to fetch data from Pollinations API.');
+        console.error(`API request failed with status: ${response.status}`);
+        alert('There was an issue fetching the AI-generated content.');
         return;
       }
 
       const responseText = await response.text();
-      console.log('Received AI response:', responseText);
+      console.log('AI response received successfully');
 
-      // Parse the response for HTML, CSS, and JS
+      // Parse the HTML, CSS, and JS
       const { html, css, js } = parseGeneratedCode(responseText);
 
-      // Clear the current feed content
-      console.log('Clearing feed content...');
-      cardGrid.innerHTML = ''; // Clear existing cards
+      // Clear the feed and replace it with new content
+      const cardGrid = document.querySelector('.card-grid');
+      cardGrid.innerHTML = html;
 
-      // Insert the parsed HTML
-      if (html) {
-        console.log('Injecting HTML into feed...');
-        feed.innerHTML = html;
-      }
-
-      // Insert CSS into the document
+      // If CSS is present, inject it into the page
       if (css) {
-        console.log('Injecting CSS...');
-        const style = document.createElement('style');
-        style.textContent = css;
-        document.head.appendChild(style);
+        const styleElement = document.createElement('style');
+        styleElement.textContent = css;
+        document.head.appendChild(styleElement);
+        console.log('CSS injected successfully');
       }
 
-      // Insert JS into the document
+      // If JS is present, inject it into the page
       if (js) {
-        console.log('Injecting JS...');
-        const script = document.createElement('script');
-        script.textContent = js;
-        document.body.appendChild(script);
+        const scriptElement = document.createElement('script');
+        scriptElement.textContent = js;
+        document.body.appendChild(scriptElement);
+        console.log('JS injected successfully');
       }
+
     } catch (error) {
-      console.error('Error fetching AI data:', error);
+      console.error("Error fetching or processing AI response:", error);
+      alert('There was an error processing your request.');
     }
   }
 });
