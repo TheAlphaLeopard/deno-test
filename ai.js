@@ -1,53 +1,48 @@
-// Fetch the input box and the feed container
-const searchBox = document.querySelector('.search-box');
-const feedContainer = document.querySelector('.card-grid');
+document.addEventListener('DOMContentLoaded', () => {
+  const searchBox = document.querySelector('.search-box');
+  const cardGrid = document.querySelector('.card-grid');
 
-// Function to handle key press events on the search box
-searchBox.addEventListener('keypress', async (event) => {
-  // Check if the Enter key is pressed
-  if (event.key === 'Enter') {
-    const query = searchBox.value.trim();
+  // Handle the 'Enter' key press event on the search box
+  searchBox.addEventListener('keydown', async (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();  // Prevent default Enter behavior (form submission, etc.)
 
-    if (query) {
-      try {
-        // Send a GET request to Pollinations.ai to get text feed
-        const response = await fetch(`https://text.pollinations.ai/feed`);
-        
-        if (response.ok) {
-          // Parse the response
+      const query = searchBox.value.trim();
+      if (query) {
+        try {
+          // Send the query to the backend API
+          const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: query,  // The query from the search box
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch data from Pollinations API');
+          }
+
           const data = await response.json();
-          console.log('AI Generated Data:', data);
 
-          // Assuming the data returned contains HTML, CSS, and JS code
-          const generatedHTML = data.html || '';
-          const generatedCSS = data.css || '';
-          const generatedJS = data.js || '';
+          // Clear the existing content in the card grid
+          cardGrid.innerHTML = '';
 
-          // Update the container with the new HTML
-          feedContainer.innerHTML = generatedHTML;
+          // Parse and insert the HTML response into the grid
+          const newCard = document.createElement('div');
+          newCard.classList.add('card');
+          newCard.innerHTML = data.html || 'No content generated.';
+          cardGrid.appendChild(newCard);
 
-          // If CSS is provided, inject it into the page
-          if (generatedCSS) {
-            const style = document.createElement('style');
-            style.innerHTML = generatedCSS;
-            document.head.appendChild(style);
-          }
-
-          // If JS is provided, evaluate it
-          if (generatedJS) {
-            const script = document.createElement('script');
-            script.innerHTML = generatedJS;
-            document.body.appendChild(script);
-          }
-
-          // Optionally, clear the search box after the request
-          searchBox.value = '';
-        } else {
-          console.error('Error fetching AI data:', response.status);
+        } catch (error) {
+          console.error('Error generating content:', error);
+          cardGrid.innerHTML = '<p>Error generating content. Please try again later.</p>';
         }
-      } catch (error) {
-        console.error('Error:', error);
+      } else {
+        cardGrid.innerHTML = '<p>Please enter a query.</p>';
       }
     }
-  }
+  });
 });
