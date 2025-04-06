@@ -1,6 +1,6 @@
 import { parseGeneratedCode } from './parser.js';
 
-const searchBox = document.querySelector('.search-box');
+const searchBox = document.querySelector('.search-container');
 const feed = document.querySelector('.feed');
 
 searchBox.addEventListener('keydown', async (event) => {
