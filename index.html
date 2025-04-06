@@ -25,11 +25,20 @@
       margin: 0;
     }
 
+    .prompt-box {
+      background: #111;
+      color: white;
+      border: 1px solid #f6ba02;
+      padding: 8px;
+      width: 300px;
+    }
+
     .settings-btn {
       background: none;
       border: none;
       color: white;
       font-size: 20px;
+      margin-left: 10px;
       cursor: pointer;
     }
 
@@ -57,60 +66,53 @@
       margin-top: 10px;
     }
 
-    .popup input[type="text"],
-    .popup input[type="checkbox"] {
-      margin-top: 5px;
+    .popup input[type="text"] {
       width: 100%;
-      padding: 5px;
-      background: #2a2a2a;
-      border: 1px solid #555;
+      padding: 6px;
+      margin-top: 5px;
+      background: #0d0d0d;
       color: white;
+      border: 1px solid #f6ba02;
     }
 
-    .popup input[type="checkbox"] {
-      width: auto;
-    }
-
-    .popup button {
-      margin-top: 15px;
-      padding: 8px 12px;
-      background: #f6ba02;
-      border: none;
-      cursor: pointer;
-      color: black;
-    }
-
-    #generated-content {
+    #generatedContent {
+      margin: 20px;
       padding: 20px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      min-height: 300px;
     }
   </style>
 </head>
 <body>
 
+  <!-- Navbar -->
   <div class="navbar">
-    <h1>digisim.ai</h1>
-    <button class="settings-btn" onclick="togglePopup()">⚙️</button>
+    <h1>Digisim AI</h1>
+    <div>
+      <input type="text" id="promptInput" class="prompt-box" placeholder="Enter your prompt..." />
+      <button class="settings-btn" onclick="togglePopup()">⚙️</button>
+    </div>
   </div>
 
+  <!-- Settings Popup -->
   <div class="popup" id="settingsPopup">
     <h2>AI Settings</h2>
-    <form id="apiForm">
-      <label>OpenAI API Key:
-        <input type="text" id="openaiKey" required />
-      </label>
-      <label>Hugging Face API Key:
-        <input type="text" id="huggingfaceKey" required />
-      </label>
-      <label>
-        <input type="checkbox" id="pollinationsCheck" /> Use Pollinations.ai?
-      </label>
-      <button type="submit">Save & Generate</button>
-    </form>
+    <label>OpenAI API Key:
+      <input type="text" id="openaiKey" />
+    </label>
+    <label>HuggingFace API Key:
+      <input type="text" id="hfKey" />
+    </label>
+    <label>
+      <input type="checkbox" id="pollinationsCheck" onchange="toggleApiKeyInputs()" />
+      Use Pollinations.ai
+    </label>
+    <button onclick="submitPrompt()">Generate</button>
   </div>
 
-  <div id="generated-content">
-    <!-- Generated HTML/CSS/JS will go here -->
-  </div>
+  <!-- Where content will be generated -->
+  <div id="generatedContent">Generated content will appear here.</div>
 
   <script>
     function togglePopup() {
@@ -118,28 +120,40 @@
       popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
     }
 
-    document.getElementById('apiForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
+    function toggleApiKeyInputs() {
+      const usePollinations = document.getElementById('pollinationsCheck').checked;
+      document.getElementById('openaiKey').disabled = usePollinations;
+      document.getElementById('hfKey').disabled = usePollinations;
+    }
 
-      const openaiKey = document.getElementById('openaiKey').value.trim();
-      const huggingfaceKey = document.getElementById('huggingfaceKey').value.trim();
-      const pollinations = document.getElementById('pollinationsCheck').checked;
+    async function submitPrompt() {
+      const prompt = document.getElementById('promptInput').value;
+      const openaiKey = document.getElementById('openaiKey').value;
+      const hfKey = document.getElementById('hfKey').value;
+      const usePollinations = document.getElementById('pollinationsCheck').checked;
 
       const response = await fetch('/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          prompt,
           openaiKey,
-          huggingfaceKey,
-          pollinations
+          hfKey,
+          usePollinations
         })
       });
 
-      const result = await response.text();
-      document.getElementById('generated-content').innerHTML = result;
-      togglePopup();
+      const data = await response.text();
+      document.getElementById('generatedContent').innerHTML = data;
+    }
+
+    // Optional: close popup if clicked outside
+    window.addEventListener('click', function(e) {
+      const popup = document.getElementById('settingsPopup');
+      const btn = document.querySelector('.settings-btn');
+      if (popup.style.display === 'block' && !popup.contains(e.target) && !btn.contains(e.target)) {
+        popup.style.display = 'none';
+      }
     });
   </script>
 
