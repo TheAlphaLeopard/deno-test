@@ -4,39 +4,41 @@ document.addEventListener("DOMContentLoaded", function () {
   const cardGrid = document.querySelector(".card-grid");
 
   // Handle search button click
-  searchButton.addEventListener("click", async function () {
+  searchButton.addEventListener("click", function () {
     const query = searchBox.value.trim();
     if (query) {
       // Show loading message
       cardGrid.innerHTML = "<p>Loading...</p>";
 
-      try {
-        // Construct Pollinations URL
-        const pollinationsUrl = `https://text.pollinations.ai/${encodeURIComponent(query)}`;
-        console.log("Generated Pollinations URL:", pollinationsUrl);
+      // Construct Pollinations URL
+      const pollinationsUrl = `https://text.pollinations.ai/${encodeURIComponent(query)}`;
+      console.log("Generated Pollinations URL:", pollinationsUrl);
 
-        // Wait for the page to load
-        const response = await fetch(pollinationsUrl);
-        if (!response.ok) {
-          throw new Error("Failed to load content from Pollinations.");
+      // Create and append iframe
+      const iframe = document.createElement("iframe");
+      iframe.src = pollinationsUrl;
+      iframe.style.width = "100%";
+      iframe.style.height = "500px";
+      iframe.onload = function () {
+        try {
+          // Access iframe document
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+          // Extract text content
+          const textContent = iframeDoc.body.innerText || iframeDoc.body.textContent;
+          console.log("Extracted Text Content:", textContent);
+          // Display the extracted text
+          cardGrid.innerHTML = `<pre>${textContent}</pre>`;
+        } catch (error) {
+          console.error("Error extracting content from iframe:", error);
+          cardGrid.innerHTML = "<p>Failed to extract content.</p>";
         }
-
-        // Extract text content from the response
-        const text = await response.text();
-
-        // Display the extracted text in the card container
-        const card = document.createElement("div");
-        card.classList.add("card");
-        card.innerHTML = `
-          <h2>Generated Content</h2>
-          <div>${text}</div>
-        `;
-        cardGrid.innerHTML = ""; // Clear previous content
-        cardGrid.appendChild(card);
-      } catch (error) {
-        console.error("Error fetching Pollinations content:", error);
-        cardGrid.innerHTML = "<p>There was an error processing your request.</p>";
-      }
+      };
+      iframe.onerror = function () {
+        console.error("Error loading iframe.");
+        cardGrid.innerHTML = "<p>Failed to load content.</p>";
+      };
+      cardGrid.innerHTML = ""; // Clear previous content
+      cardGrid.appendChild(iframe);
     } else {
       alert("Please enter a valid query!");
     }

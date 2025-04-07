@@ -24,9 +24,14 @@ serve(async (req) => {
   console.log(`Request URL: ${pathname}`);
 
   // Serve static files
-  if (pathname === "/") {
-    const file = await Deno.readFile(join(ROOT_DIR, "index.html"));
-    return new Response(file, { headers: { "Content-Type": "text/html" } });
+  if (pathname === "/" || pathname === "/index.html") {
+    try {
+      const file = await Deno.readFile(join(ROOT_DIR, "index.html"));
+      return new Response(file, { headers: { "Content-Type": "text/html" } });
+    } catch (error) {
+      console.error("Error reading index.html:", error);
+      return new Response("Not Found", { status: 404 });
+    }
   }
 
   // Serve other static files
@@ -46,43 +51,4 @@ serve(async (req) => {
     console.error(`Error serving file: ${error}`);
     return new Response("Not Found", { status: 404 });
   }
-
-  // Handle API requests for Pollinations URL generation
-  if (pathname === "/api/generate" && req.method === "POST") {
-    try {
-      const body = await req.json();
-      const { query } = body;
-      console.log("Received query:", query);
-
-      if (query) {
-        // Construct Pollinations URL
-        const pollinationsUrl = `https://text.pollinations.ai/${encodeURIComponent(query)}`;
-        console.log("Generated Pollinations URL:", pollinationsUrl);
-
-        // Return the Pollinations URL
-        return new Response(JSON.stringify({ url: pollinationsUrl }), {
-          headers: { "Content-Type": "application/json" }
-        });
-
-      } else {
-        console.log("Missing query in the request body.");
-        return new Response(JSON.stringify({
-          error: "Query is missing in the request.",
-        }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" }
-        });
-      }
-    } catch (error) {
-      console.error("Error parsing the request body:", error);
-      return new Response(JSON.stringify({
-        error: `Error parsing request: ${error.message}`,
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-  }
-
-  return new Response("Not Found", { status: 404 });
 });
