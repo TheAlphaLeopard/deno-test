@@ -1,57 +1,47 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const searchBox = document.querySelector('.search-box');
-  const sendButton = document.querySelector('.send-btn');
-  const cardGrid = document.querySelector('.card-grid');
+document.addEventListener("DOMContentLoaded", function () {
+  const searchBox = document.querySelector(".search-box");
+  const searchButton = document.querySelector(".search-button");
+  const cardGrid = document.querySelector(".card-grid");
 
-  sendButton.addEventListener('click', async () => {
+  // Handle search button click
+  searchButton.addEventListener("click", async function () {
     const query = searchBox.value.trim();
-    if (!query) {
-      console.log("Query is empty.");
-      return;
-    }
+    if (query) {
+      // Show loading or message indicating the action is in progress
+      cardGrid.innerHTML = "<p>Loading...</p>";
 
-    console.log(`Sending query: ${query}`);
+      try {
+        // Send the query to the server for Pollinations URL generation
+        const response = await fetch("/api/generate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query: query }),
+        });
 
-    try {
-      // Send the query to the Deno backend API for generating content
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: query }),
-      });
+        if (!response.ok) {
+          throw new Error("Failed to fetch data from the server.");
+        }
 
-      if (!response.ok) {
-        console.error("Error fetching AI content:", response.status);
-        alert('Error fetching content from Pollinations AI.');
-        return;
+        const data = await response.json();
+        console.log("Generated Pollinations URL:", data.url);
+
+        // Display the generated URL or link in the card container
+        const card = document.createElement("div");
+        card.classList.add("card");
+        card.innerHTML = `
+          <h2>Generated Content</h2>
+          <a href="${data.url}" target="_blank">${data.url}</a>
+        `;
+        cardGrid.innerHTML = ""; // Clear any previous content
+        cardGrid.appendChild(card);
+      } catch (error) {
+        console.error("Error fetching Pollinations URL:", error);
+        cardGrid.innerHTML = "<p>There was an error processing your request.</p>";
       }
-
-      const data = await response.json();
-      console.log("Received data:", data);
-
-      // Clear the current feed
-      cardGrid.innerHTML = '';
-
-      // Replace the feed with the generated HTML
-      cardGrid.innerHTML = data.html;
-
-      // Inject CSS if present
-      if (data.css) {
-        const styleElement = document.createElement('style');
-        styleElement.textContent = data.css;
-        document.head.appendChild(styleElement);
-      }
-
-      // Inject JS if present
-      if (data.js) {
-        const scriptElement = document.createElement('script');
-        scriptElement.textContent = data.js;
-        document.body.appendChild(scriptElement);
-      }
-
-    } catch (error) {
-      console.error("Error sending request:", error);
-      alert('An error occurred while processing your request.');
+    } else {
+      alert("Please enter a valid query!");
     }
   });
 });
