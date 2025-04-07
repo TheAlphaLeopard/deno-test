@@ -56,45 +56,15 @@ serve(async (req) => {
       console.log("Received query:", query);
 
       if (query) {
-        try {
-          // Construct Pollinations API URL with proper query encoding
-          const pollinationsUrl = `https://text.pollinations.ai/${encodeURIComponent(query)}`;
-          console.log("Requesting Pollinations API with URL:", pollinationsUrl);
+        // Construct Pollinations URL directly with the query (no fetch)
+        const pollinationsUrl = `https://text.pollinations.ai/${query.replace(/\s+/g, '%20')}`;
+        console.log("Generated Pollinations URL:", pollinationsUrl);
 
-          // Make the fetch request to Pollinations API
-          const response = await fetch(pollinationsUrl);
+        // Return the Pollinations URL (no need to fetch)
+        return new Response(JSON.stringify({ url: pollinationsUrl }), {
+          headers: { "Content-Type": "application/json" }
+        });
 
-          // Log the Pollinations API response
-          console.log("Pollinations API response status:", response.status);
-          const responseText = await response.text();
-          console.log("Pollinations API response text:", responseText);
-
-          if (!response.ok) {
-            console.error("Error from Pollinations API:", responseText);
-            return new Response(JSON.stringify({ error: "Pollinations API error: " + responseText }), {
-              status: 500,
-              headers: { "Content-Type": "application/json" }
-            });
-          }
-
-          // Parse the response and extract HTML, CSS, JS
-          const { html, css, js } = parseGeneratedCode(responseText);
-          console.log("Generated HTML, CSS, and JS:", { html, css, js });
-
-          // Return the generated HTML, CSS, JS in the response
-          return new Response(JSON.stringify({ html, css, js }), {
-            headers: { "Content-Type": "application/json" }
-          });
-
-        } catch (error) {
-          console.error("Error calling Pollinations API:", error);
-          return new Response(JSON.stringify({
-            error: `Error calling Pollinations API: ${error.message}`,
-          }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" }
-          });
-        }
       } else {
         console.log("Missing query in the request body.");
         return new Response(JSON.stringify({
