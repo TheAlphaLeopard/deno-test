@@ -1,60 +1,57 @@
-import { parseGeneratedCode } from './parser.js';
+document.addEventListener("DOMContentLoaded", () => {
+  const searchBox = document.querySelector('.search-box');
+  const sendButton = document.querySelector('.send-btn');
+  const cardGrid = document.querySelector('.card-grid');
 
-const searchBox = document.querySelector('.search-box');
-const sendButton = document.querySelector('.send-btn');
-const feed = document.querySelector('.feed');
-
-sendButton.addEventListener('click', async () => {
-  // Log to confirm the button click event is triggered
-  alert('Send button clicked!');  // This will show an alert when the button is clicked
-
-  const query = searchBox.value.trim();
-  if (!query) return;
-
-  alert(`Query submitted: ${query}`);
-  console.log(`Query submitted: ${query}`);
-  const encodedQuery = encodeURIComponent(query);
-
-  try {
-    // Make the API call
-    const response = await fetch(`https://text.pollinations.ai/${encodedQuery}`);
-    
-    // Check for API success
-    if (!response.ok) {
-      console.error(`API request failed with status: ${response.status}`);
-      alert('There was an issue fetching the AI-generated content.');
+  sendButton.addEventListener('click', async () => {
+    const query = searchBox.value.trim();
+    if (!query) {
+      console.log("Query is empty.");
       return;
     }
 
-    const responseText = await response.text();
-    alert('AI response received successfully');
-    console.log('AI response received successfully');
+    console.log(`Sending query: ${query}`);
 
-    // Parse the HTML, CSS, and JS
-    const { html, css, js } = parseGeneratedCode(responseText);
+    try {
+      // Send the query to the Deno backend API for generating content
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query }),
+      });
 
-    // Clear the feed and replace it with new content
-    const cardGrid = document.querySelector('.card-grid');
-    cardGrid.innerHTML = html;
+      if (!response.ok) {
+        console.error("Error fetching AI content:", response.status);
+        alert('Error fetching content from Pollinations AI.');
+        return;
+      }
 
-    // If CSS is present, inject it into the page
-    if (css) {
-      const styleElement = document.createElement('style');
-      styleElement.textContent = css;
-      document.head.appendChild(styleElement);
-      console.log('CSS injected successfully');
+      const data = await response.json();
+      console.log("Received data:", data);
+
+      // Clear the current feed
+      cardGrid.innerHTML = '';
+
+      // Replace the feed with the generated HTML
+      cardGrid.innerHTML = data.html;
+
+      // Inject CSS if present
+      if (data.css) {
+        const styleElement = document.createElement('style');
+        styleElement.textContent = data.css;
+        document.head.appendChild(styleElement);
+      }
+
+      // Inject JS if present
+      if (data.js) {
+        const scriptElement = document.createElement('script');
+        scriptElement.textContent = data.js;
+        document.body.appendChild(scriptElement);
+      }
+
+    } catch (error) {
+      console.error("Error sending request:", error);
+      alert('An error occurred while processing your request.');
     }
-
-    // If JS is present, inject it into the page
-    if (js) {
-      const scriptElement = document.createElement('script');
-      scriptElement.textContent = js;
-      document.body.appendChild(scriptElement);
-      console.log('JS injected successfully');
-    }
-
-  } catch (error) {
-    console.error("Error fetching or processing AI response:", error);
-    alert('There was an error processing your request.');
-  }
+  });
 });
