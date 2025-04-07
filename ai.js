@@ -27,14 +27,22 @@ document.addEventListener("DOMContentLoaded", function () {
         const data = await response.json();
         console.log("Generated Pollinations URL:", data.url);
 
-        // Display the generated URL or link in the card container
+        // Wait for the Pollinations URL to load and fetch the HTML content
+        const pollinationsResponse = await fetch(data.url);
+        if (!pollinationsResponse.ok) {
+          throw new Error("Failed to fetch content from Pollinations URL.");
+        }
+
+        const htmlContent = await pollinationsResponse.text();
+        console.log("Fetched HTML content:", htmlContent);
+
+        // Inject the fetched HTML content into the card grid
         const card = document.createElement("div");
         card.classList.add("card");
-        card.innerHTML = `
-          <h2>Generated Content</h2>
-          <a href="${data.url}" target="_blank">${data.url}</a>
-        `;
-        cardGrid.innerHTML = ""; // Clear any previous content
+        card.innerHTML = htmlContent;
+
+        // Clear the current content and append the generated card
+        cardGrid.innerHTML = "";
         cardGrid.appendChild(card);
       } catch (error) {
         console.error("Error fetching Pollinations URL:", error);

@@ -1,89 +1,79 @@
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { extname, join } from "https://deno.land/std@0.224.0/path/mod.ts";
-import { parseGeneratedCode } from './parser.js';
+import { serve } from "std/http/server.ts";
+import { join } from "std/path/mod.ts";
+import { extname } from "std/path/mod.ts";
 
-const PORT = 8000;
-const ROOT_DIR = "./"; // Root directory
+const PORT = 8000;  // Make sure you run the server on the correct port
 
-const MIME_TYPES: { [key: string]: string } = {
-  '.html': 'text/html',
-  '.css': 'text/css',
-  '.js': 'application/javascript',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.json': 'application/json',
-  '.txt': 'text/plain',
-};
-
+// Log incoming requests for better debugging
 console.log(`Server running at http://localhost:${PORT}`);
 
 serve(async (req) => {
   const url = new URL(req.url);
-  const pathname = url.pathname;
-  console.log(`Request URL: ${pathname}`);
+  const path = url.pathname;
 
-  // Serve the index.html for the root path
-  if (pathname === "/") {
-    const file = await Deno.readFile(join(ROOT_DIR, "index.html"));
-    return new Response(file, { headers: { "Content-Type": "text/html" } });
-  }
-
-  // Serve static files dynamically
+  // Serve static files
+  const filePath = join(Deno.cwd(), path);
   try {
-    const filePath = join(ROOT_DIR, pathname);
+    const fileStats = await Deno.stat(filePath);
+    if (fileStats.isDirectory) {
+      return new Response("Directory listing not supported", { status: 403 });
+    }
+
     const fileExtension = extname(filePath);
-    const mimeType = MIME_TYPES[fileExtension];
+    const mimeType = getMimeType(fileExtension);
 
     if (mimeType) {
       const file = await Deno.readFile(filePath);
-      return new Response(file, { headers: { "Content-Type": mimeType } });
+      return new Response(file, {
+        status: 200,
+        headers: { "Content-Type": mimeType },
+      });
     }
-
-    return new Response("Not Found", { status: 404 });
-
   } catch (error) {
-    console.error(`Error serving file: ${error}`);
-    return new Response("Not Found", { status: 404 });
+    console.error("Error serving static file:", error);
   }
 
-  // Handle API requests for Pollinations AI
-  if (pathname === "/api/generate" && req.method === "POST") {
+  // Handle the API request for generating content using Pollinations AI
+  if (path === "/api/generate" && req.method === "POST") {
     try {
       const body = await req.json();
       const { query } = body;
+
       console.log("Received query:", query);
 
       if (query) {
-        // Construct Pollinations URL directly with the query (no fetch)
-        const pollinationsUrl = `https://text.pollinations.ai/${query.replace(/\s+/g, '%20')}`;
-        console.log("Generated Pollinations URL:", pollinationsUrl);
+        // Construct the Pollinations URL based on user input
+        const url = `https://text.pollinations.ai/${encodeURIComponent(query)}`;
+        console.log("Generated Pollinations URL:", url);
 
-        // Return the Pollinations URL (no need to fetch)
-        return new Response(JSON.stringify({ url: pollinationsUrl }), {
-          headers: { "Content-Type": "application/json" }
+        // Return the Pollinations URL to the frontend
+        return new Response(JSON.stringify({ url }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
         });
-
       } else {
-        console.log("Missing query in the request body.");
-        return new Response(JSON.stringify({
-          error: "Query is missing in the request.",
-        }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" }
-        });
+        return new Response(JSON.stringify({ error: "Missing query in request." }), { status: 400 });
       }
     } catch (error) {
-      console.error("Error parsing the request body:", error);
-      return new Response(JSON.stringify({
-        error: `Error parsing request: ${error.message}`,
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
+      console.error("Error processing request:", error);
+      return new Response(JSON.stringify({ error: "Error processing the request." }), { status: 500 });
     }
   }
 
   return new Response("Not Found", { status: 404 });
 });
+
+// Helper function to get MIME type based on file extension
+function getMimeType(extension: string): string | undefined {
+  const mimeTypes: { [key: string]: string } = {
+    ".html": "text/html",
+    ".css": "text/css",
+    ".js": "application/javascript",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".gif": "image/gif",
+    ".json": "application/json",
+  };
+
+  return mimeTypes[extension.toLowerCase()];
+}
