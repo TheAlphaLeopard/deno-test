@@ -327,7 +327,7 @@ body {
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
 }
 
-.send-btn {
+.search-button {
   position: absolute;
   right: 5px;  /* Position the button on the right edge */
   top: 50%;
@@ -339,7 +339,7 @@ body {
   cursor: pointer;
 }
 
-.send-btn:hover {
+.search-button:hover {
   background-color: #d8a900; /* Slightly darker yellow when hovered */
 }
 
