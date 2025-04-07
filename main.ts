@@ -1,6 +1,7 @@
-import { serve } from "https://deno.land/std/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { extname } from "https://deno.land/std@0.224.0/path/mod.ts";
 
-const PORT = 8000;  // Make sure the server is running on the correct port
+const PORT = 8000;  // Set the server port
 
 // Log incoming requests for better debugging
 console.log(`Server running at http://localhost:${PORT}`);
@@ -12,7 +13,7 @@ serve(async (req) => {
   // Serve the index.html file
   if (url.pathname === "/") {
     try {
-      const file = await Deno.readTextFile("./index.html"); // Adjust the path if needed
+      const file = await Deno.readTextFile("./index.html"); // Adjust the path to your index.html file
       return new Response(file, {
         status: 200,
         headers: { "Content-Type": "text/html; charset=UTF-8" },
@@ -23,24 +24,40 @@ serve(async (req) => {
     }
   }
 
-  // Serve static files (e.g., CSS, JS, images)
+  // Serve static files (CSS, JS, images, etc.)
   if (url.pathname.startsWith("/assets/")) {
     const filePath = `.${url.pathname}`;
     try {
+      const ext = extname(filePath).slice(1);  // Get file extension without dot
+      let contentType: string;
+
+      // Set appropriate content type for CSS, JS, and image files
+      switch (ext) {
+        case "css":
+          contentType = "text/css";
+          break;
+        case "js":
+          contentType = "application/javascript";
+          break;
+        case "png":
+          contentType = "image/png";
+          break;
+        case "jpg":
+        case "jpeg":
+          contentType = "image/jpeg";
+          break;
+        case "svg":
+          contentType = "image/svg+xml";
+          break;
+        case "ico":
+          contentType = "image/x-icon";
+          break;
+        default:
+          contentType = "application/octet-stream";
+          break;
+      }
+
       const file = await Deno.readFile(filePath);
-      const ext = filePath.split('.').pop();
-
-      const mimeTypes: { [key: string]: string } = {
-        "css": "text/css",
-        "js": "application/javascript",
-        "png": "image/png",
-        "jpg": "image/jpeg",
-        "jpeg": "image/jpeg",
-        "svg": "image/svg+xml",
-        "ico": "image/x-icon",
-      };
-
-      const contentType = mimeTypes[ext] || "application/octet-stream";
       return new Response(file, {
         status: 200,
         headers: { "Content-Type": contentType },
