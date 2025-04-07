@@ -1,97 +1,121 @@
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { extname } from "https://deno.land/std@0.224.0/path/mod.ts";
+import { serve } from "https://deno.land/std/http/server.ts";
 
-console.log("🚀 Server running...");
+const PORT = 8000;  // Make sure the server is running on the correct port
+
+// Log incoming requests for better debugging
+console.log(`Server running at http://localhost:${PORT}`);
 
 serve(async (req) => {
   const url = new URL(req.url);
-  const pathname = decodeURIComponent(url.pathname);
-  console.log(`🔗 Incoming request: ${req.method} ${pathname}`);
+  console.log(`Request URL: ${url.pathname}`);
 
-  // === Handle AI POST endpoint ===
-  if (pathname === "/api/generate" && req.method === "POST") {
+  // Serve the index.html file
+  if (url.pathname === "/") {
     try {
+      const file = await Deno.readTextFile("./index.html"); // Adjust the path if needed
+      return new Response(file, {
+        status: 200,
+        headers: { "Content-Type": "text/html; charset=UTF-8" },
+      });
+    } catch (error) {
+      console.error("Error reading index.html:", error);
+      return new Response("Internal Server Error", { status: 500 });
+    }
+  }
+
+  // Serve static files (e.g., CSS, JS, images)
+  if (url.pathname.startsWith("/assets/")) {
+    const filePath = `.${url.pathname}`;
+    try {
+      const file = await Deno.readFile(filePath);
+      const ext = filePath.split('.').pop();
+
+      const mimeTypes: { [key: string]: string } = {
+        "css": "text/css",
+        "js": "application/javascript",
+        "png": "image/png",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "svg": "image/svg+xml",
+        "ico": "image/x-icon",
+      };
+
+      const contentType = mimeTypes[ext] || "application/octet-stream";
+      return new Response(file, {
+        status: 200,
+        headers: { "Content-Type": contentType },
+      });
+    } catch (error) {
+      console.error(`Error reading static file ${url.pathname}:`, error);
+      return new Response("Not Found", { status: 404 });
+    }
+  }
+
+  // Handle the API request for generating content using Pollinations AI
+  if (url.pathname === "/api/generate" && req.method === "POST") {
+    try {
+      // Parse the incoming JSON request body
       const body = await req.json();
       const { query } = body;
 
-      console.log("📥 Received query:", query);
+      console.log("Received query:", query);
 
-      if (!query) {
-        return new Response(JSON.stringify({ error: "Missing 'query' in request body." }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
+      if (query) {
+        try {
+          // Send the query to Pollinations API to generate HTML content
+          const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(query)}`);
 
-      const encodedPrompt = encodeURIComponent(query);
-      const aiURL = `https://text.pollinations.ai/${encodedPrompt}`;
-      console.log(`🌐 Fetching AI content from: ${aiURL}`);
+          // Check if Pollinations API responded successfully
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Pollinations API returned an error:", errorText);
+            return new Response(JSON.stringify({
+              error: `Pollinations API failed: ${errorText}`,
+            }), {
+              status: 500,
+              headers: { "Content-Type": "application/json" }
+            });
+          }
 
-      try {
-        const res = await fetch(aiURL);
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error("❌ Pollinations AI error:", errorText);
-          return new Response(JSON.stringify({ error: "Pollinations AI request failed." }), {
+          const data = await response.text();
+          console.log("Pollinations API response:", data);
+
+          // Return the generated HTML
+          return new Response(JSON.stringify({
+            html: data, // Directly use the raw response text from Pollinations
+          }), {
+            headers: { "Content-Type": "application/json" }
+          });
+
+        } catch (error) {
+          console.error("Error calling Pollinations API:", error);
+          return new Response(JSON.stringify({
+            error: `Error calling Pollinations API: ${error.message}`,
+          }), {
             status: 500,
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json" }
           });
         }
-
-        const html = await res.text();
-        console.log("✅ AI HTML received.");
-
-        return new Response(JSON.stringify({ html }), {
-          headers: { "Content-Type": "application/json" },
-        });
-
-      } catch (err) {
-        console.error("💥 Fetch error:", err);
-        return new Response(JSON.stringify({ error: "Failed to fetch AI content." }), {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
+      } else {
+        console.log("Missing query in the request body.");
+        return new Response(JSON.stringify({
+          error: "Query is missing in the request.",
+        }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" }
         });
       }
-
-    } catch (err) {
-      console.error("💥 JSON parsing error:", err);
-      return new Response(JSON.stringify({ error: "Invalid request body." }), {
+    } catch (error) {
+      console.error("Error parsing the request body:", error);
+      return new Response(JSON.stringify({
+        error: `Error parsing request: ${error.message}`,
+      }), {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" }
       });
     }
   }
 
-  // === Serve Static Files ===
-  let filePath = pathname === "/" ? "/index.html" : pathname;
-
-  try {
-    const file = await Deno.readFile(`.${filePath}`);
-    const contentType = getContentType(filePath);
-    console.log(`📄 Serving static file: ${filePath}`);
-    return new Response(file, {
-      headers: { "Content-Type": contentType },
-    });
-  } catch (err) {
-    console.warn(`❓ Static file not found: ${filePath}`);
-    return new Response("Not Found", { status: 404 });
-  }
+  // Default response for unknown routes
+  return new Response("Not Found", { status: 404 });
 });
-
-// === Helper to detect content type ===
-function getContentType(path: string): string {
-  const ext = extname(path);
-  const map: Record<string, string> = {
-    ".html": "text/html",
-    ".js": "application/javascript",
-    ".css": "text/css",
-    ".json": "application/json",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".svg": "image/svg+xml",
-    ".ico": "image/x-icon",
-    ".txt": "text/plain",
-  };
-  return map[ext] || "application/octet-stream";
-}
