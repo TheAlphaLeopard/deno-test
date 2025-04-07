@@ -7,45 +7,34 @@ document.addEventListener("DOMContentLoaded", function () {
   searchButton.addEventListener("click", async function () {
     const query = searchBox.value.trim();
     if (query) {
-      // Show loading or message indicating the action is in progress
+      // Show loading message
       cardGrid.innerHTML = "<p>Loading...</p>";
 
       try {
-        // Send the query to the server for Pollinations URL generation
-        const response = await fetch("/api/generate", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ query: query }),
-        });
+        // Construct Pollinations URL
+        const pollinationsUrl = `https://text.pollinations.ai/${encodeURIComponent(query)}`;
+        console.log("Generated Pollinations URL:", pollinationsUrl);
 
+        // Wait for the page to load
+        const response = await fetch(pollinationsUrl);
         if (!response.ok) {
-          throw new Error("Failed to fetch data from the server.");
+          throw new Error("Failed to load content from Pollinations.");
         }
 
-        const data = await response.json();
-        console.log("Generated Pollinations URL:", data.url);
+        // Extract text content from the response
+        const text = await response.text();
 
-        // Wait for the Pollinations URL to load and fetch the HTML content
-        const pollinationsResponse = await fetch(data.url);
-        if (!pollinationsResponse.ok) {
-          throw new Error("Failed to fetch content from Pollinations URL.");
-        }
-
-        const htmlContent = await pollinationsResponse.text();
-        console.log("Fetched HTML content:", htmlContent);
-
-        // Inject the fetched HTML content into the card grid
+        // Display the extracted text in the card container
         const card = document.createElement("div");
         card.classList.add("card");
-        card.innerHTML = htmlContent;
-
-        // Clear the current content and append the generated card
-        cardGrid.innerHTML = "";
+        card.innerHTML = `
+          <h2>Generated Content</h2>
+          <div>${text}</div>
+        `;
+        cardGrid.innerHTML = ""; // Clear previous content
         cardGrid.appendChild(card);
       } catch (error) {
-        console.error("Error fetching Pollinations URL:", error);
+        console.error("Error fetching Pollinations content:", error);
         cardGrid.innerHTML = "<p>There was an error processing your request.</p>";
       }
     } else {
