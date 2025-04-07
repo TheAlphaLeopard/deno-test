@@ -21,8 +21,11 @@ document.addEventListener("DOMContentLoaded", function () {
     // Show loading state or any visual feedback if needed
     feedContainer.innerHTML = "<p>Loading...</p>";
 
-    // Construct the URL for Pollinations API
-    const apiUrl = `https://text.pollinations.ai/${encodeURIComponent(prompt)}`;
+    // Create the prompt for Pollinations AI
+    const fullPrompt = `Create a high quality, detailed, functional HTML game using this prompt: ${prompt}. Make all of the CSS, HTML, and JS all in one file. Don't generate anything else other than the HTML code for the prompt.`;
+
+    // Construct the URL for Pollinations API with the full prompt
+    const apiUrl = `https://text.pollinations.ai/${encodeURIComponent(fullPrompt)}`;
 
     try {
       // Fetch the AI response from Pollinations

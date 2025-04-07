@@ -1,57 +1,48 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const searchBox = document.querySelector('.search-box');
-    const sendButton = document.querySelector('.send-btn');
-    const cardGrid = document.querySelector('.card-grid');
+document.addEventListener("DOMContentLoaded", function () {
+    const searchBox = document.querySelector(".search-box");
+    const searchButton = document.querySelector(".search-button");
+    const feedContainer = document.querySelector(".card-grid");
   
-    sendButton.addEventListener('click', async () => {
-      const query = searchBox.value.trim();
-      if (!query) {
-        console.log("Query is empty.");
+    if (!searchBox || !searchButton || !feedContainer) {
+      console.error("Required elements not found");
+      return;
+    }
+  
+    // Handle search button click
+    searchButton.addEventListener("click", async function () {
+      const prompt = searchBox.value.trim();
+      if (!prompt) {
+        console.log("No input provided");
         return;
       }
   
-      console.log(`Sending query: ${query}`);
+      console.log("User input:", prompt);
+  
+      // Show loading state or any visual feedback if needed
+      feedContainer.innerHTML = "<p>Loading...</p>";
+  
+      // Create the prompt for Pollinations AI
+      const fullPrompt = `Create a high quality, detailed, functional HTML game using this prompt: ${prompt}. Make all of the CSS, HTML, and JS all in one file. Don't generate anything else other than the HTML code for the prompt.`;
+  
+      // Construct the URL for Pollinations API with the full prompt
+      const apiUrl = `https://text.pollinations.ai/${encodeURIComponent(fullPrompt)}`;
   
       try {
-        // Send the query to the Deno backend API for generating content
-        const response = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: query }),
-        });
+        // Fetch the AI response from Pollinations
+        const response = await fetch(apiUrl);
   
         if (!response.ok) {
-          console.error("Error fetching AI content:", response.status);
-          alert('Error fetching content from Pollinations AI.');
-          return;
+          throw new Error('Failed to fetch AI response');
         }
   
-        const data = await response.json();
-        console.log("Received data:", data);
+        const aiContent = await response.text();
   
-        // Clear the current feed
-        cardGrid.innerHTML = '';
-  
-        // Replace the feed with the generated HTML
-        cardGrid.innerHTML = data.html;
-  
-        // Inject CSS if present
-        if (data.css) {
-          const styleElement = document.createElement('style');
-          styleElement.textContent = data.css;
-          document.head.appendChild(styleElement);
-        }
-  
-        // Inject JS if present
-        if (data.js) {
-          const scriptElement = document.createElement('script');
-          scriptElement.textContent = data.js;
-          document.body.appendChild(scriptElement);
-        }
-  
+        // Clear loading text and display the AI-generated content
+        feedContainer.innerHTML = aiContent;
+        console.log("AI Content:", aiContent);
       } catch (error) {
-        console.error("Error sending request:", error);
-        alert('An error occurred while processing your request.');
+        console.error("Error fetching from Pollinations API:", error);
+        feedContainer.innerHTML = "<p>Sorry, something went wrong. Please try again later.</p>";
       }
     });
   });
