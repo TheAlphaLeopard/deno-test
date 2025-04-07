@@ -23,35 +23,6 @@ serve(async (req) => {
   const pathname = url.pathname;
   console.log(`Request URL: ${pathname}`);
 
-  // Handle API endpoint for fetching content from Pollinations AI
-  if (pathname.startsWith("/api/generate/")) {
-    const prompt = pathname.replace("/api/generate/", "").trim();
-    console.log("Received prompt:", prompt);
-
-    if (!prompt) {
-      return new Response("Prompt is required", { status: 400 });
-    }
-
-    try {
-      // Construct Pollinations URL
-      const pollinationsUrl = `https://text.pollinations.ai/${encodeURIComponent(prompt)}`;
-      console.log("Fetching from Pollinations URL:", pollinationsUrl);
-
-      const response = await fetch(pollinationsUrl);
-      if (!response.ok) {
-        throw new Error("Failed to fetch content from Pollinations");
-      }
-
-      const text = await response.text();
-      console.log("Fetched text from Pollinations:", text);
-
-      return new Response(text, { headers: { "Content-Type": "text/plain" } });
-    } catch (error) {
-      console.error("Error in /api/generate endpoint:", error);
-      return new Response("Internal Server Error", { status: 500 });
-    }
-  }
-
   // Serve static files dynamically
   try {
     // For root, serve index.html
