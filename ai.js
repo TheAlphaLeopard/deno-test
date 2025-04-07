@@ -1,46 +1,43 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const searchBox = document.querySelector(".search-box");
+  const promptInput = document.getElementById("promptInput");
   const searchButton = document.querySelector(".search-button");
   const cardGrid = document.querySelector(".card-grid");
 
+  if (!promptInput || !searchButton || !cardGrid) {
+    console.error("Required elements not found");
+    return;
+  }
+
   // Handle search button click
   searchButton.addEventListener("click", function () {
-    const query = searchBox.value.trim();
-    if (query) {
-      // Show loading message
-      cardGrid.innerHTML = "<p>Loading...</p>";
+    const prompt = promptInput.value.trim();
+    if (!prompt || prompt === "Generating...") return;
 
-      // Construct Pollinations URL
-      const pollinationsUrl = `https://text.pollinations.ai/${encodeURIComponent(query)}`;
-      console.log("Generated Pollinations URL:", pollinationsUrl);
+    console.log("Prompt submitted:", prompt);
 
-      // Create and append iframe
-      const iframe = document.createElement("iframe");
-      iframe.src = pollinationsUrl;
-      iframe.style.width = "100%";
-      iframe.style.height = "500px";
-      iframe.onload = function () {
-        try {
-          // Access iframe document
-          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-          // Extract text content
-          const textContent = iframeDoc.body.innerText || iframeDoc.body.textContent;
-          console.log("Extracted Text Content:", textContent);
-          // Display the extracted text
-          cardGrid.innerHTML = `<pre>${textContent}</pre>`;
-        } catch (error) {
-          console.error("Error extracting content from iframe:", error);
-          cardGrid.innerHTML = "<p>Failed to extract content.</p>";
+    // Show loading state
+    cardGrid.innerHTML = "<p>Generating...</p>";
+
+    // Construct Pollinations URL
+    const pollinationsUrl = `https://text.pollinations.ai/${encodeURIComponent(prompt)}`;
+    console.log("Generated Pollinations URL:", pollinationsUrl);
+
+    // Fetch content from Pollinations AI
+    fetch(pollinationsUrl)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
         }
-      };
-      iframe.onerror = function () {
-        console.error("Error loading iframe.");
-        cardGrid.innerHTML = "<p>Failed to load content.</p>";
-      };
-      cardGrid.innerHTML = ""; // Clear previous content
-      cardGrid.appendChild(iframe);
-    } else {
-      alert("Please enter a valid query!");
-    }
+        return response.text();
+      })
+      .then((text) => {
+        console.log("Fetched text from Pollinations:", text);
+        // Display the extracted text
+        cardGrid.innerHTML = `<pre>${text}</pre>`;
+      })
+      .catch((error) => {
+        console.error("Error fetching content:", error);
+        cardGrid.innerHTML = "<p>Error generating content. Please try again.</p>";
+      });
   });
 });
