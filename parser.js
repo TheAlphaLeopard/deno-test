@@ -1,24 +1,18 @@
 // parser.js
 export function parseGeneratedCode(responseText) {
   try {
-    // Look for <html>...</html> block
+    // Use regex to extract content between <html>...</html>, <style>...</style>, and <script>...</script>
     const htmlMatch = responseText.match(/<html[^>]*>([\s\S]*?)<\/html>/i);
-    // Look for <style>...</style> block
     const cssMatch = responseText.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-    // Look for <script>...</script> block
     const jsMatch = responseText.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
 
-    const htmlContent = htmlMatch ? htmlMatch[1].trim() : "";
-    const cssContent = cssMatch ? cssMatch[1].trim() : "";
-    const jsContent = jsMatch ? jsMatch[1].trim() : "";
-
     return {
-      html: htmlContent,
-      css: cssContent,
-      js: jsContent,
+      html: htmlMatch ? htmlMatch[1].trim() : "",
+      css: cssMatch ? cssMatch[1].trim() : "",
+      js: jsMatch ? jsMatch[1].trim() : "",
     };
   } catch (error) {
-    console.error("Error parsing generated content:", error);
+    console.error("Error parsing AI response:", error);
     return { html: "", css: "", js: "" };
   }
 }

@@ -23,6 +23,7 @@ serve(async (req) => {
   const pathname = url.pathname;
   console.log(`Request URL: ${pathname}`);
 
+  // Serve static files dynamically
   try {
     // For root, serve index.html
     if (pathname === "/" || pathname === "/index.html") {
@@ -30,7 +31,6 @@ serve(async (req) => {
       return new Response(file, { headers: { "Content-Type": "text/html" } });
     }
 
-    // For any other file, serve it dynamically based on file extension.
     const filePath = join(ROOT_DIR, pathname);
     const fileExtension = extname(filePath);
     const mimeType = MIME_TYPES[fileExtension];
