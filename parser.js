@@ -1,18 +1,18 @@
+// parser.js
 export function parseGeneratedCode(responseText) {
   try {
-    // Regex to extract the HTML, CSS, and JS from the response
-    const htmlMatch = responseText.match(/<html.*?>([\s\S]*?)<\/html>/);
-    const cssMatch = responseText.match(/<style.*?>([\s\S]*?)<\/style>/);
-    const jsMatch = responseText.match(/<script.*?>([\s\S]*?)<\/script>/);
+    // Use regex to extract content between <html>...</html>, <style>...</style>, and <script>...</script>
+    const htmlMatch = responseText.match(/<html[^>]*>([\s\S]*?)<\/html>/i);
+    const cssMatch = responseText.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+    const jsMatch = responseText.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
 
-    // Parse the HTML, CSS, and JS (if available)
-    const html = htmlMatch ? htmlMatch[1] : "<div>No HTML content generated.</div>";
-    const css = cssMatch ? cssMatch[1] : "";
-    const js = jsMatch ? jsMatch[1] : "";
-
-    return { html, css, js };
+    return {
+      html: htmlMatch ? htmlMatch[1].trim() : "",
+      css: cssMatch ? cssMatch[1].trim() : "",
+      js: jsMatch ? jsMatch[1].trim() : "",
+    };
   } catch (error) {
-    console.error("Error parsing the response:", error);
-    return { html: "<div>Error parsing AI response</div>", css: "", js: "" };
+    console.error("Error parsing AI response:", error);
+    return { html: "", css: "", js: "" };
   }
 }
